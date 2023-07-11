@@ -15,7 +15,6 @@ Open with an editor and add your OpenApi key that you can obtain here: https://h
 ## How to run
 ```shell
 > cd backend
-> yarn tsc
-> node dist/index.js
+> yarn start
 ```
 Open a browser and navigate to http://localhost:4000

@@ -1,32 +1,44 @@
+// src/index.ts
 import * as express from 'express';
 import * as dotenv from 'dotenv';
-import { Configuration, OpenAIApi} from "openai"
+import { Configuration, OpenAIApi, ChatCompletionRequestMessage } from "openai"
 
 const envPath = process.env.NODE_ENV === 'production' ? '.env' : '.env.local';
 dotenv.config({ path: envPath });
 
 const app = express();
 const port = 4000;
+
+app.use(express.json());
 app.listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
 });
 
-const configuration = new Configuration({
+const openai = new OpenAIApi(new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
+}));
+
+let messages: ChatCompletionRequestMessage[] = [];
+messages.push({
+  role: "system",
+  content: "You are a financial coach. I will be asking you questions"
 });
 
-const openai = new OpenAIApi(configuration);
+app.post('/api/prompt', async (req, res) => {
+  const { prompt } = req.body;
 
-app.get('/', async (req, res) => {
+  messages.push({
+    role: "user",
+    content: prompt
+  })
+  
   try {
-    const completion = await openai.createChatCompletion({
+    const gptResponse = await openai.createChatCompletion({
         model: "gpt-3.5-turbo-16k",
-        messages: [{
-          role: "user",
-          content: "You are a financial coach. Start with one quick short question"
-        }],
-  });
-    res.send(completion.data.choices[0].message);
+        messages
+    });
+
+    res.send(gptResponse.data.choices[0].message);
   } catch (error: any) {
       if (error.response) {
           console.error(error.response.status);
